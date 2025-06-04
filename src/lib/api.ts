@@ -43,6 +43,21 @@ interface ApplicationData {
   lineId?: string;
 }
 
+// 定義團體資料介面
+interface OrganizationData {
+  organization_id: number;
+  plan_id: number;
+  name: string;
+  org_name: string;
+  membership_fee: string;
+  description: string;
+  logo: string;
+  cover_image: string;
+  business_number: string;
+  logo_url: string;
+  cover_image_url: string;
+}
+
 /**
  * 通用請求函數
  */
@@ -97,7 +112,7 @@ export async function getOrganizations(organizationId?: number) {
 
     // 修復圖片URL協議問題
     if (response.code === 200 && response.data) {
-      response.data = response.data.map((org: any) => ({
+      response.data = response.data.map((org: OrganizationData) => ({
         ...org,
         logo_url: fixImageUrl(org.logo_url),
         cover_image_url: fixImageUrl(org.cover_image_url),
