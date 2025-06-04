@@ -1,21 +1,13 @@
 /**
- * 會員繳費系統API - 完全依賴環境變數
+ * 會員繳費系統API - 使用本地代理解決CORS問題
  */
 
-// 從環境變數讀取 API 基礎網址，必須設定
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-// 檢查必要的環境變數
-if (!API_BASE_URL) {
-  throw new Error(
-    "缺少必要的環境變數：NEXT_PUBLIC_API_BASE_URL\n" +
-      "請確認已設定正確的 .env.local 或對應環境的 .env 文件"
-  );
-}
+// 使用本地API代理路由，避免CORS問題
+const API_BASE_URL = "/api";
 
 // 除錯模式顯示配置資訊
 if (process.env.NEXT_PUBLIC_DEBUG === "true") {
-  console.log(`🌐 API Base URL: ${API_BASE_URL}`);
+  console.log(`🌐 API Base URL: ${API_BASE_URL} (使用本地代理)`);
   console.log(`🔧 Debug Mode: ${process.env.NEXT_PUBLIC_DEBUG}`);
 }
 
