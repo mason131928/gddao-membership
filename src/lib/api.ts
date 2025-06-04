@@ -65,6 +65,20 @@ async function request(url: string, options: RequestInit = {}) {
 }
 
 /**
+ * 修復圖片URL為HTTPS協議
+ */
+function fixImageUrl(url: string): string {
+  if (!url) return url;
+
+  // 如果是HTTP協議，轉換為HTTPS
+  if (url.startsWith("http://api.gddao.com/")) {
+    return url.replace("http://api.gddao.com/", "https://api.gddao.com/");
+  }
+
+  return url;
+}
+
+/**
  * 獲取開啟會員繳費的團體列表
  */
 export async function getOrganizations(organizationId?: number) {
@@ -75,6 +89,16 @@ export async function getOrganizations(organizationId?: number) {
 
     const response = await request(url);
     console.log("API 回應:", response);
+
+    // 修復圖片URL協議問題
+    if (response.code === 200 && response.data) {
+      response.data = response.data.map((org: any) => ({
+        ...org,
+        logo_url: fixImageUrl(org.logo_url),
+        cover_image_url: fixImageUrl(org.cover_image_url),
+      }));
+    }
+
     return response.code === 200 ? response.data : [];
   } catch (error) {
     console.error("獲取團體列表失敗:", error);
