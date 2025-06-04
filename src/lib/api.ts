@@ -2,7 +2,7 @@
  * 會員繳費系統API - 使用本地代理解決CORS問題
  */
 
-// 使用本地API代理路由，避免CORS問題
+// 使用相對API路徑，依賴Next.js rewrites配置
 const API_BASE_URL = "/api";
 
 // 除錯模式顯示配置資訊
