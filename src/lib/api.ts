@@ -65,14 +65,19 @@ async function request(url: string, options: RequestInit = {}) {
 }
 
 /**
- * 修復圖片URL為HTTPS協議
+ * 修復圖片URL為正確的域名和HTTPS協議
  */
 function fixImageUrl(url: string): string {
   if (!url) return url;
 
-  // 如果是HTTP協議，轉換為HTTPS
+  // 如果是HTTP協議的api.gddao.com，轉換為HTTPS的gddao.com
   if (url.startsWith("http://api.gddao.com/")) {
-    return url.replace("http://api.gddao.com/", "https://api.gddao.com/");
+    return url.replace("http://api.gddao.com/", "https://gddao.com/");
+  }
+
+  // 如果是HTTPS協議的api.gddao.com，轉換為gddao.com
+  if (url.startsWith("https://api.gddao.com/")) {
+    return url.replace("https://api.gddao.com/", "https://gddao.com/");
   }
 
   return url;
