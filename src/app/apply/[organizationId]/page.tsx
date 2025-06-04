@@ -19,8 +19,6 @@ interface FormData {
   phone: string;
   email: string;
   address?: string;
-  emergency_contact?: string;
-  emergency_phone?: string;
 }
 
 export default function ApplyPage() {
@@ -42,12 +40,23 @@ export default function ApplyPage() {
     mutationFn: createApplication,
     onSuccess: (result) => {
       console.log("申請成功:", result);
-      alert("申請提交成功！即將跳轉到付款頁面...");
-      router.push(`/payment/${result.application_id || result.id}`);
+
+      // 檢查後端是否返回付款URL
+      if (result.payment_url) {
+        alert("申請提交成功！即將跳轉到付款頁面...");
+        // 直接跳轉到後端生成的藍新金流付款頁面
+        window.location.href = result.payment_url;
+      } else {
+        // 備用方案：跳轉到我們的付款頁面
+        alert("申請提交成功！即將跳轉到付款頁面...");
+        router.push(`/payment/${result.application_id || result.id}`);
+      }
     },
     onError: (error) => {
       console.error("申請失敗:", error);
-      alert("申請失敗，請稍後重試");
+      const errorMessage =
+        error instanceof Error ? error.message : "申請失敗，請稍後重試";
+      alert(errorMessage);
     },
   });
 

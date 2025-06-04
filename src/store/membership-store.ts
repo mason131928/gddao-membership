@@ -4,161 +4,159 @@
 
 import { create } from "zustand";
 import type {
+  Organization,
   MembershipPlan,
-  MembershipApplication,
+  Application,
   PaymentRecord,
   MembershipStats,
 } from "@/types/membership";
 
+// Membership Store State
 interface MembershipState {
+  // 組織相關
+  organizations: Organization[];
+  currentOrganization: Organization | null;
+
+  // 申請相關
+  applications: Application[];
+  currentApplication: Application | null;
+
   // 會費方案
   plans: MembershipPlan[];
-  selectedPlan: MembershipPlan | null;
-
-  // 申請記錄
-  applications: MembershipApplication[];
-  currentApplication: MembershipApplication | null;
+  currentPlan: MembershipPlan | null;
 
   // 付款記錄
   payments: PaymentRecord[];
-  currentPayment: PaymentRecord | null;
 
   // 統計資料
   stats: MembershipStats | null;
 
-  // UI 狀態
-  isLoading: boolean;
-  error: string | null;
+  // Loading states
+  loading: {
+    organizations: boolean;
+    applications: boolean;
+    payments: boolean;
+    stats: boolean;
+  };
+}
 
-  // 動作
+// Membership Store Actions
+interface MembershipActions {
+  // 組織操作
+  setOrganizations: (organizations: Organization[]) => void;
+  setCurrentOrganization: (organization: Organization | null) => void;
+
+  // 申請操作
+  setApplications: (applications: Application[]) => void;
+  setCurrentApplication: (application: Application | null) => void;
+  addApplication: (application: Application) => void;
+  updateApplication: (id: number, application: Partial<Application>) => void;
+
+  // 會費方案操作
   setPlans: (plans: MembershipPlan[]) => void;
-  setSelectedPlan: (plan: MembershipPlan | null) => void;
-  addPlan: (plan: MembershipPlan) => void;
-  updatePlan: (id: number, plan: Partial<MembershipPlan>) => void;
+  setCurrentPlan: (plan: MembershipPlan | null) => void;
 
-  setApplications: (applications: MembershipApplication[]) => void;
-  setCurrentApplication: (application: MembershipApplication | null) => void;
-  addApplication: (application: MembershipApplication) => void;
-  updateApplication: (
-    id: number,
-    application: Partial<MembershipApplication>
-  ) => void;
-
+  // 付款記錄操作
   setPayments: (payments: PaymentRecord[]) => void;
-  setCurrentPayment: (payment: PaymentRecord | null) => void;
   addPayment: (payment: PaymentRecord) => void;
   updatePayment: (id: number, payment: Partial<PaymentRecord>) => void;
 
-  setStats: (stats: MembershipStats) => void;
+  // 統計資料操作
+  setStats: (stats: MembershipStats | null) => void;
 
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  clearError: () => void;
+  // Loading 操作
+  setLoading: (key: keyof MembershipState["loading"], value: boolean) => void;
 
+  // 重設操作
   reset: () => void;
 }
 
-const initialState = {
-  plans: [],
-  selectedPlan: null,
+type MembershipStore = MembershipState & MembershipActions;
+
+// 初始狀態
+const initialState: MembershipState = {
+  organizations: [],
+  currentOrganization: null,
   applications: [],
   currentApplication: null,
+  plans: [],
+  currentPlan: null,
   payments: [],
-  currentPayment: null,
   stats: null,
-  isLoading: false,
-  error: null,
+  loading: {
+    organizations: false,
+    applications: false,
+    payments: false,
+    stats: false,
+  },
 };
 
-export const useMembershipStore = create<MembershipState>((set) => ({
+// 建立 Zustand Store
+export const useMembershipStore = create<MembershipStore>((set) => ({
   ...initialState,
 
-  // 會費方案相關動作
-  setPlans: (plans) => set({ plans }),
+  // 組織操作
+  setOrganizations: (organizations) => set({ organizations }),
+  setCurrentOrganization: (currentOrganization) => set({ currentOrganization }),
 
-  setSelectedPlan: (plan) => set({ selectedPlan: plan }),
-
-  addPlan: (plan) =>
-    set((state) => ({
-      plans: [...state.plans, plan],
-    })),
-
-  updatePlan: (id, planData) =>
-    set((state) => ({
-      plans: state.plans.map((plan) =>
-        plan.id === id ? { ...plan, ...planData } : plan
-      ),
-    })),
-
-  // 申請記錄相關動作
+  // 申請操作
   setApplications: (applications) => set({ applications }),
-
-  setCurrentApplication: (application) =>
-    set({ currentApplication: application }),
-
+  setCurrentApplication: (currentApplication) => set({ currentApplication }),
   addApplication: (application) =>
     set((state) => ({
       applications: [...state.applications, application],
     })),
-
-  updateApplication: (id, applicationData) =>
+  updateApplication: (id, updatedApplication) =>
     set((state) => ({
       applications: state.applications.map((app) =>
-        app.id === id ? { ...app, ...applicationData } : app
+        app.id === id ? { ...app, ...updatedApplication } : app
       ),
-      currentApplication:
-        state.currentApplication?.id === id
-          ? { ...state.currentApplication, ...applicationData }
-          : state.currentApplication,
     })),
 
-  // 付款記錄相關動作
+  // 會費方案操作
+  setPlans: (plans) => set({ plans }),
+  setCurrentPlan: (currentPlan) => set({ currentPlan }),
+
+  // 付款記錄操作
   setPayments: (payments) => set({ payments }),
-
-  setCurrentPayment: (payment) => set({ currentPayment: payment }),
-
   addPayment: (payment) =>
     set((state) => ({
       payments: [...state.payments, payment],
     })),
-
-  updatePayment: (id, paymentData) =>
+  updatePayment: (id, updatedPayment) =>
     set((state) => ({
       payments: state.payments.map((payment) =>
-        payment.id === id ? { ...payment, ...paymentData } : payment
+        payment.id === id ? { ...payment, ...updatedPayment } : payment
       ),
-      currentPayment:
-        state.currentPayment?.id === id
-          ? { ...state.currentPayment, ...paymentData }
-          : state.currentPayment,
     })),
 
-  // 統計資料相關動作
+  // 統計資料操作
   setStats: (stats) => set({ stats }),
 
-  // UI 狀態相關動作
-  setLoading: (loading) => set({ isLoading: loading }),
+  // Loading 操作
+  setLoading: (key, value) =>
+    set((state) => ({
+      loading: {
+        ...state.loading,
+        [key]: value,
+      },
+    })),
 
-  setError: (error) => set({ error }),
-
-  clearError: () => set({ error: null }),
-
-  // 重置狀態
+  // 重設操作
   reset: () => set(initialState),
 }));
 
-// 選擇器函數
+// Selector 函數，用於從 store 中選取特定資料
+export const selectOrganizations = (state: MembershipState) =>
+  state.organizations;
+export const selectCurrentOrganization = (state: MembershipState) =>
+  state.currentOrganization;
 export const selectPlans = (state: MembershipState) => state.plans;
-export const selectSelectedPlan = (state: MembershipState) =>
-  state.selectedPlan;
+export const selectCurrentPlan = (state: MembershipState) => state.currentPlan;
 export const selectApplications = (state: MembershipState) =>
   state.applications;
 export const selectCurrentApplication = (state: MembershipState) =>
   state.currentApplication;
 export const selectPayments = (state: MembershipState) => state.payments;
-export const selectCurrentPayment = (state: MembershipState) =>
-  state.currentPayment;
 export const selectStats = (state: MembershipState) => state.stats;
-export const selectIsLoading = (state: MembershipState) => state.isLoading;
-export const selectError = (state: MembershipState) => state.error;
- 
+export const selectLoading = (state: MembershipState) => state.loading;

@@ -2,12 +2,12 @@
  * 會員繳費系統API - 使用本地代理解決CORS問題
  */
 
-// 使用相對API路徑，依賴Next.js rewrites配置
-const API_BASE_URL = "/api";
+// 正確的API基礎URL，考慮basePath
+const API_BASE_URL = "/membership/api";
 
 // 除錯模式顯示配置資訊
 if (process.env.NEXT_PUBLIC_DEBUG === "true") {
-  console.log(`🌐 API Base URL: ${API_BASE_URL} (使用本地代理)`);
+  console.log(`🌐 API Base URL: ${API_BASE_URL} (使用本地代理解決CORS問題)`);
   console.log(`🔧 Debug Mode: ${process.env.NEXT_PUBLIC_DEBUG}`);
 }
 
@@ -54,7 +54,11 @@ interface OrganizationData {
  * 通用請求函數
  */
 async function request(url: string, options: RequestInit = {}) {
-  const response = await fetch(`${API_BASE_URL}${url}`, {
+  const fullUrl = `${API_BASE_URL}${url}`;
+  console.log("🌐 前端發送請求:", fullUrl);
+  console.log("📝 請求選項:", options);
+
+  const response = await fetch(fullUrl, {
     headers: {
       "Content-Type": "application/json",
       Language: "cht",
@@ -63,12 +67,27 @@ async function request(url: string, options: RequestInit = {}) {
     ...options,
   });
 
+  console.log("📡 響應狀態:", response.status);
+  console.log("📄 響應URL:", response.url);
+  console.log("📋 響應頭:", Object.fromEntries(response.headers.entries()));
+
   if (!response.ok) {
     const errorText = await response.text();
+    console.error("❌ 響應錯誤:", errorText);
     throw new Error(`HTTP ${response.status}: ${errorText}`);
   }
 
-  return response.json();
+  const responseText = await response.text();
+  console.log("📄 原始響應:", responseText.substring(0, 200) + "...");
+
+  try {
+    return JSON.parse(responseText);
+  } catch (error) {
+    console.error("❌ JSON解析錯誤:", error);
+    console.error("📄 完整響應內容:", responseText);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`無法解析JSON響應: ${errorMessage}`);
+  }
 }
 
 /**
@@ -96,8 +115,8 @@ function fixImageUrl(url: string): string {
 export async function getOrganizations(organizationId?: number) {
   try {
     const url = organizationId
-      ? `/api/membership/organizations?organization_id=${organizationId}`
-      : "/api/membership/organizations";
+      ? `/membership/organizations?organization_id=${organizationId}`
+      : "/membership/organizations";
 
     const response = await request(url);
     console.log("API 回應:", response);
@@ -123,7 +142,7 @@ export async function getOrganizations(organizationId?: number) {
  */
 export async function createApplication(data: ApplicationData) {
   try {
-    const response = await request("/api/membership/apply", {
+    const response = await request("/membership/apply", {
       method: "POST",
       body: JSON.stringify(data),
     });
@@ -144,7 +163,7 @@ export async function adminLogin(data: {
   password: string;
 }) {
   try {
-    const response = await request("/api/membership/admin/login", {
+    const response = await request("/membership/admin/login", {
       method: "POST",
       body: JSON.stringify(data),
     });
@@ -165,7 +184,7 @@ export async function getApplications(
 ) {
   try {
     const response = await request(
-      `/api/membership/admin/applications?organization_id=${organizationId}&page=${page}&limit=${limit}`
+      `/membership/admin/applications?organization_id=${organizationId}&page=${page}&limit=${limit}`
     );
     return response;
   } catch (error) {
@@ -183,7 +202,7 @@ export async function exportApplications(
 ) {
   try {
     const statusParam = status ? `&status=${status}` : "";
-    const url = `${API_BASE_URL}/api/membership/admin/export/applications?organization_id=${organizationId}${statusParam}`;
+    const url = `${API_BASE_URL}/membership/admin/export/applications?organization_id=${organizationId}${statusParam}`;
 
     // 直接開啟下載連結
     window.open(url, "_blank");
@@ -202,7 +221,7 @@ export async function createPayment(data: {
   organizationId: number;
 }) {
   try {
-    const response = await request("/api/membership/payment/create", {
+    const response = await request("/membership/payment/create", {
       method: "POST",
       body: JSON.stringify(data),
     });
@@ -223,7 +242,7 @@ export async function updateApplicationStatus(
 ) {
   try {
     const response = await request(
-      `/api/membership/admin/applications/${applicationId}/status`,
+      `/membership/admin/applications/${applicationId}/status`,
       {
         method: "PUT",
         body: JSON.stringify({ status }),

@@ -68,37 +68,32 @@ export interface CompleteApplicationData {
   phone: string; // 行動電話
   email: string; // 電子信箱
   lineId?: string; // LINE ID
-  emergencyContact?: string;
-  emergencyPhone?: string;
 }
 
 // 入會申請記錄
-export interface MembershipApplication {
+export interface Application {
   id: number;
   organizationId: number;
+  planId: number;
   name: string;
-  birthDate: string;
-  idNumber: string;
-  gender: "male" | "female" | "other";
-  genderOther?: string;
-  education: string;
-  educationOther?: string;
+  birthDate?: string;
+  idNumber?: string;
+  gender?: string;
+  education?: string;
   schoolName?: string;
   department?: string;
   workUnit?: string;
   jobTitle?: string;
-  address: string;
+  address?: string;
   phone: string;
   email: string;
   lineId?: string;
   userId?: number;
-  amount: number; // 會費金額
-  status: "pending" | "paid" | "approved" | "rejected";
+  status: "pending" | "paid";
   appliedAt: string;
   paidAt?: string;
-  approvedAt?: string;
-  organization?: Organization;
-  plan?: MembershipPlan; // 添加關聯的會費方案
+  amount?: string;
+  planName?: string;
 }
 
 // 付款記錄
@@ -114,7 +109,7 @@ export interface PaymentRecord {
   newebpayOrderNo?: string;
   paidAt?: string;
   createdAt: string;
-  application?: MembershipApplication;
+  application?: Application;
 }
 
 // API 響應類型
@@ -140,7 +135,6 @@ export interface MembershipStats {
   totalApplications: number;
   pendingApplications: number;
   paidApplications: number;
-  approvedApplications: number;
   totalRevenue: number;
   thisMonthApplications: number;
   thisMonthRevenue: number;
@@ -154,8 +148,6 @@ export interface CreateApplicationRequest {
   phone: string;
   email: string;
   address?: string;
-  emergencyContact?: string;
-  emergencyPhone?: string;
   birthDate?: string;
   idNumber?: string;
   gender?: "male" | "female" | "other";

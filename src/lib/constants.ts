@@ -22,7 +22,6 @@ export const ERROR_MESSAGES = {
 export const SUCCESS_MESSAGES = {
   APPLICATION_SUBMITTED: "申請已提交，即將跳轉至付款頁面",
   PAYMENT_SUCCESS: "付款成功！",
-  APPLICATION_APPROVED: "申請已通過審核",
   DATA_SAVED: "資料已儲存",
   STATUS_UPDATED: "狀態已更新",
 } as const;
@@ -45,19 +44,36 @@ export const UI_CONFIG = {
   MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
 } as const;
 
+// 應用狀態訊息
+export const APPLICATION_MESSAGES = {
+  APPLICATION_PENDING: "申請待處理",
+  APPLICATION_PAID: "申請已付費",
+  PAYMENT_PENDING: "付款處理中",
+  PAYMENT_SUCCESS: "付款成功",
+  PAYMENT_FAILED: "付款失敗",
+} as const;
+
+// API 端點
+export const API_ENDPOINTS = {
+  ORGANIZATIONS: "/membership/organizations",
+  APPLY: "/membership/apply",
+  PAYMENT_CREATE: "/membership/payment/create",
+  PAYMENT_STATUS: "/membership/payment/status",
+  ADMIN_LOGIN: "/membership/admin/login",
+  ADMIN_APPLICATIONS: "/membership/admin/applications",
+  ADMIN_EXPORT: "/membership/admin/export",
+} as const;
+
 // 申請狀態
 export const APPLICATION_STATUS = {
   PENDING: "pending",
   PAID: "paid",
-  APPROVED: "approved",
-  REJECTED: "rejected",
 } as const;
 
-export const APPLICATION_STATUS_LABELS = {
+// 狀態顯示文字映射
+export const STATUS_LABELS = {
   [APPLICATION_STATUS.PENDING]: "待付款",
-  [APPLICATION_STATUS.PAID]: "已付款",
-  [APPLICATION_STATUS.APPROVED]: "已通過",
-  [APPLICATION_STATUS.REJECTED]: "已拒絕",
+  [APPLICATION_STATUS.PAID]: "已付費",
 } as const;
 
 // 付款狀態
@@ -83,15 +99,6 @@ export const ROUTES = {
   PAYMENT_FAILED: "/payment/failed",
 } as const;
 
-// API 端點
-export const API_ENDPOINTS = {
-  ORGANIZATIONS: "/api/organizations",
-  APPLICATIONS: "/api/membership/applications",
-  PAYMENTS: "/api/membership/payments",
-  PAYMENT_CALLBACK: "/api/membership/payment/callback",
-  STATS: "/api/membership/stats",
-} as const;
-
 // 預設值
 export const DEFAULTS = {
   MEMBERSHIP_FEE: 300, // 預設會費金額
@@ -101,5 +108,5 @@ export const DEFAULTS = {
 } as const;
 
 // 為了向後相容，添加別名
-export const APPLICATION_STATUS_TEXT = APPLICATION_STATUS_LABELS;
+export const APPLICATION_STATUS_TEXT = STATUS_LABELS;
 export const PAYMENT_STATUS_TEXT = PAYMENT_STATUS_LABELS;

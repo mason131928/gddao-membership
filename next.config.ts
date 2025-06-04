@@ -6,16 +6,6 @@ const nextConfig: NextConfig = {
   // 移除 trailingSlash，可能影響API路由
   // trailingSlash: true,
 
-  // 確保API路由重寫
-  async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: "/api/:path*",
-      },
-    ];
-  },
-
   images: {
     remotePatterns: [
       // 正式環境

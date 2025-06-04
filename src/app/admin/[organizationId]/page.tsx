@@ -94,8 +94,6 @@ export default function AdminDashboard() {
         return <Badge variant="default">已付款</Badge>;
       case "failed":
         return <Badge variant="destructive">付款失敗</Badge>;
-      case "approved":
-        return <Badge variant="default">已審核</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -214,7 +212,6 @@ export default function AdminDashboard() {
                       <SelectItem value="all">全部狀態</SelectItem>
                       <SelectItem value="pending">待付款</SelectItem>
                       <SelectItem value="paid">已付款</SelectItem>
-                      <SelectItem value="approved">已審核</SelectItem>
                       <SelectItem value="failed">付款失敗</SelectItem>
                     </SelectContent>
                   </Select>

@@ -4,68 +4,27 @@
  * 申請列表表格組件
  */
 
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { updateApplicationStatus } from "@/lib/api";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import {
-  APPLICATION_STATUS,
-  APPLICATION_STATUS_TEXT,
-  SUCCESS_MESSAGES,
-} from "@/lib/constants";
-import type { MembershipApplication } from "@/types/membership";
+import { APPLICATION_STATUS, STATUS_LABELS } from "@/lib/constants";
+import type { Application } from "@/types/membership";
 
 interface ApplicationsTableProps {
-  applications: MembershipApplication[];
-  organizationId: number;
+  applications: Application[];
   isLoading?: boolean;
 }
 
 export function ApplicationsTable({
   applications,
-  organizationId,
   isLoading,
 }: ApplicationsTableProps) {
-  const [processingId, setProcessingId] = useState<number | null>(null);
-  const queryClient = useQueryClient();
-
-  // 更新申請狀態
-  const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: string }) =>
-      updateApplicationStatus(id, status),
-    onSuccess: () => {
-      // 重新載入申請列表
-      queryClient.invalidateQueries({
-        queryKey: ["applications", organizationId],
-      });
-      alert(SUCCESS_MESSAGES.STATUS_UPDATED);
-      setProcessingId(null);
-    },
-    onError: (error) => {
-      console.error("更新狀態失敗:", error);
-      alert("更新狀態失敗，請重試");
-      setProcessingId(null);
-    },
-  });
-
-  const handleStatusUpdate = (id: number, status: string) => {
-    setProcessingId(id);
-    updateStatusMutation.mutate({ id, status });
-  };
-
   const getStatusBadge = (status: string) => {
     const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
     switch (status) {
       case APPLICATION_STATUS.PENDING:
         return `${baseClasses} bg-orange-100 text-orange-800`;
       case APPLICATION_STATUS.PAID:
-        return `${baseClasses} bg-blue-100 text-blue-800`;
-      case APPLICATION_STATUS.APPROVED:
         return `${baseClasses} bg-green-100 text-green-800`;
-      case APPLICATION_STATUS.REJECTED:
-        return `${baseClasses} bg-red-100 text-red-800`;
       default:
         return `${baseClasses} bg-gray-100 text-gray-800`;
     }
@@ -149,17 +108,19 @@ export function ApplicationsTable({
                     </div>
                   </td>
                   <td className="py-3 px-4">
-                    <p className="font-medium">{application.plan?.name}</p>
+                    <p className="font-medium">
+                      {application.planName || "會員方案"}
+                    </p>
                   </td>
                   <td className="py-3 px-4">
                     <p className="font-medium">
-                      {application.plan &&
-                        formatCurrency(application.plan.amount)}
+                      {application.amount &&
+                        formatCurrency(parseFloat(application.amount))}
                     </p>
                   </td>
                   <td className="py-3 px-4">
                     <span className={getStatusBadge(application.status)}>
-                      {APPLICATION_STATUS_TEXT[application.status]}
+                      {STATUS_LABELS[application.status] || application.status}
                     </span>
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-500">
@@ -167,43 +128,14 @@ export function ApplicationsTable({
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex space-x-2">
-                      {application.status === APPLICATION_STATUS.PAID && (
-                        <>
-                          <Button
-                            size="sm"
-                            onClick={() =>
-                              handleStatusUpdate(
-                                application.id,
-                                APPLICATION_STATUS.APPROVED
-                              )
-                            }
-                            disabled={processingId === application.id}
-                          >
-                            {processingId === application.id
-                              ? "處理中..."
-                              : "核准"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() =>
-                              handleStatusUpdate(
-                                application.id,
-                                APPLICATION_STATUS.REJECTED
-                              )
-                            }
-                            disabled={processingId === application.id}
-                          >
-                            拒絕
-                          </Button>
-                        </>
-                      )}
+                      {/* 目前簡化版本不需要審核功能，付款成功即完成 */}
                       {application.status === APPLICATION_STATUS.PENDING && (
                         <span className="text-sm text-gray-500">等待付款</span>
                       )}
-                      {(application.status === APPLICATION_STATUS.APPROVED ||
-                        application.status === APPLICATION_STATUS.REJECTED) && (
-                        <span className="text-sm text-gray-500">已處理</span>
+                      {application.status === APPLICATION_STATUS.PAID && (
+                        <span className="text-sm text-green-600">
+                          會員申請完成
+                        </span>
                       )}
                     </div>
                   </td>
