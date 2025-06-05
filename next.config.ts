@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
         hostname: "gddao.com",
         pathname: "/storage/**",
       },
+      {
+        protocol: "https",
+        hostname: "gddao.com",
+        pathname: "/web/uploads/**",
+      },
       // 本地開發環境
       {
         protocol: "http",
