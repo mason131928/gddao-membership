@@ -388,7 +388,7 @@ export function ApplicationForm({
                   htmlFor="address"
                   className="text-sm sm:text-base font-medium"
                 >
-                  聯絡地址 *
+                  聯絡地址 <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="address"

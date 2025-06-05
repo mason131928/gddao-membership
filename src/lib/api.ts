@@ -2,16 +2,21 @@
  * 會員繳費系統API - 使用本地代理解決CORS問題
  */
 
-// 正確的API基礎URL，考慮basePath
-const API_BASE_URL = "/membership/api";
+// 正確的API基礎URL，考慮到basePath
+const API_BASE_URL =
+  process.env.NODE_ENV === "production" ? "/membership/api" : "/api";
 
 // 除錯模式顯示配置資訊
 if (process.env.NEXT_PUBLIC_DEBUG === "true") {
-  console.log(`🌐 API Base URL: ${API_BASE_URL} (使用本地代理解決CORS問題)`);
+  console.log(
+    `🌐 API Base URL: ${API_BASE_URL} (環境: ${process.env.NODE_ENV})`
+  );
   console.log(`🔧 Debug Mode: ${process.env.NEXT_PUBLIC_DEBUG}`);
 }
 
-// 定義介面類型
+/**
+ * 申請資料介面
+ */
 interface ApplicationData {
   organization_id: number;
   planId?: number;
@@ -35,7 +40,36 @@ interface ApplicationData {
   lineId?: string;
 }
 
-// 定義團體資料介面
+/**
+ * 申請結果資料介面（從API返回的資料）
+ */
+interface ApplicationResult {
+  id: number;
+  name: string;
+  phone: string;
+  email: string;
+  address?: string;
+  birth_date?: string;
+  id_number?: string;
+  gender?: string;
+  education?: string;
+  school_name?: string;
+  department?: string;
+  work_unit?: string;
+  job_title?: string;
+  line_id?: string;
+  plan_name?: string;
+  amount?: number;
+  status: string;
+  applied_at?: string;
+  paid_at?: string;
+  next_payment_date?: string;
+  next_payment_amount?: number;
+}
+
+/**
+ * 組織資料介面
+ */
 interface OrganizationData {
   organization_id: number;
   plan_id: number;
@@ -56,37 +90,72 @@ interface OrganizationData {
 async function request(url: string, options: RequestInit = {}) {
   const fullUrl = `${API_BASE_URL}${url}`;
   console.log("🌐 前端發送請求:", fullUrl);
+  console.log("🔧 環境:", process.env.NODE_ENV);
+  console.log(
+    "📍 當前location:",
+    typeof window !== "undefined" ? window.location.href : "服務器端"
+  );
   console.log("📝 請求選項:", options);
 
-  const response = await fetch(fullUrl, {
-    headers: {
-      "Content-Type": "application/json",
-      Language: "cht",
-      ...options.headers,
-    },
-    ...options,
-  });
-
-  console.log("📡 響應狀態:", response.status);
-  console.log("📄 響應URL:", response.url);
-  console.log("📋 響應頭:", Object.fromEntries(response.headers.entries()));
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("❌ 響應錯誤:", errorText);
-    throw new Error(`HTTP ${response.status}: ${errorText}`);
-  }
-
-  const responseText = await response.text();
-  console.log("📄 原始響應:", responseText.substring(0, 200) + "...");
+  // 設置超時控制器
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超時
 
   try {
-    return JSON.parse(responseText);
+    const response = await fetch(fullUrl, {
+      headers: {
+        "Content-Type": "application/json",
+        Language: "cht",
+        ...options.headers,
+      },
+      signal: controller.signal,
+      ...options,
+    });
+
+    clearTimeout(timeoutId);
+
+    console.log("📡 響應狀態:", response.status);
+    console.log("📄 響應URL:", response.url);
+    console.log("📋 響應頭:", Object.fromEntries(response.headers.entries()));
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ 響應錯誤:", errorText);
+
+      // 檢查是否是504錯誤
+      if (response.status === 504) {
+        throw new Error("🕐 服務器響應超時，請稍後再試");
+      }
+
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+
+    const responseText = await response.text();
+    console.log("📄 原始響應:", responseText.substring(0, 200) + "...");
+
+    try {
+      return JSON.parse(responseText);
+    } catch (error) {
+      console.error("❌ JSON解析錯誤:", error);
+      console.error("📄 完整響應內容:", responseText);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      throw new Error(`無法解析JSON響應: ${errorMessage}`);
+    }
   } catch (error) {
-    console.error("❌ JSON解析錯誤:", error);
-    console.error("📄 完整響應內容:", responseText);
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`無法解析JSON響應: ${errorMessage}`);
+    clearTimeout(timeoutId);
+
+    if (error instanceof Error) {
+      if (error.name === "AbortError") {
+        console.error("🕐 請求超時");
+        throw new Error("請求超時，請檢查網絡連接");
+      }
+
+      console.error("🌐 網絡請求錯誤:", error.message);
+      throw error;
+    }
+
+    throw new Error("未知錯誤");
   }
 }
 
@@ -205,7 +274,7 @@ export async function exportApplications(
     console.log("⚠️ 使用前端CSV匯出功能（PHP後端Excel功能待部署）");
 
     // 獲取所有申請資料
-    let allApplications: any[] = [];
+    let allApplications: ApplicationResult[] = [];
     let page = 1;
     const limit = 100;
 
@@ -256,7 +325,7 @@ export async function exportApplications(
 /**
  * 生成CSV格式內容
  */
-function generateCSV(applications: any[]): string {
+function generateCSV(applications: ApplicationResult[]): string {
   // CSV表頭
   const headers = [
     "申請編號",
@@ -319,8 +388,8 @@ function generateCSV(applications: any[]): string {
       app.address || "",
       app.birth_date || "",
       app.id_number || "",
-      genderMap[app.gender] || app.gender || "",
-      educationMap[app.education] || app.education || "",
+      genderMap[app.gender || ""] || app.gender || "",
+      educationMap[app.education || ""] || app.education || "",
       app.school_name || "",
       app.department || "",
       app.work_unit || "",
@@ -328,7 +397,7 @@ function generateCSV(applications: any[]): string {
       app.line_id || "",
       app.plan_name || "",
       app.amount ? `$${Number(app.amount).toFixed(0)}` : "",
-      statusMap[app.status] || app.status || "",
+      statusMap[app.status || ""] || app.status || "",
       app.applied_at ? formatDateTime(app.applied_at) : "",
       app.paid_at ? formatDateTime(app.paid_at) : "",
       app.next_payment_date ? formatDate(app.next_payment_date) : "未設定",
@@ -381,24 +450,25 @@ function formatDate(dateString: string): string {
 
 /**
  * 創建付款訂單
+ * @deprecated 現在付款直接在申請時處理，不需要單獨調用
  */
-export async function createPayment(data: {
-  applicationId: number;
-  amount: number;
-  organizationId: number;
-}) {
-  try {
-    const response = await request("/membership/payment/create", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-    console.log("付款創建回應:", response);
-    return response.code === 200 ? response.data : response;
-  } catch (error) {
-    console.error("創建付款失敗:", error);
-    throw error;
-  }
-}
+// export async function createPayment(data: {
+//   applicationId: number;
+//   amount: number;
+//   organizationId: number;
+// }) {
+//   try {
+//     const response = await request("/membership/payment/create", {
+//       method: "POST",
+//       body: JSON.stringify(data),
+//     });
+//     console.log("付款創建回應:", response);
+//     return response.code === 200 ? response.data : response;
+//   } catch (error) {
+//     console.error("創建付款失敗:", error);
+//     throw error;
+//   }
+// }
 
 /**
  * 更新申請狀態（管理後台用）

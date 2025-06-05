@@ -34,3 +34,10 @@ export interface ApiError {
   msg: string;
   errors?: Record<string, string[]>;
 }
+
+export interface ApplicationResponse {
+  application_id: number;
+  payment_id: number;
+  payment_url: string;
+  user_id?: number;
+}

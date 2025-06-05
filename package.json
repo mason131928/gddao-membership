@@ -55,8 +55,20 @@
   "pnpm": {
     "ignoredBuiltDependencies": [
       "@tailwindcss/oxide",
+      "lightningcss",
       "sharp",
       "unrs-resolver"
-    ]
+    ],
+    "supportedArchitectures": {
+      "os": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "cpu": [
+        "x64",
+        "arm64"
+      ]
+    }
   }
 }

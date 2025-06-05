@@ -210,7 +210,7 @@ export default function AdminDashboard() {
                     <SelectTrigger className="w-full sm:w-32 h-10">
                       <SelectValue placeholder="篩選狀態" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-50">
                       <SelectItem value="all">全部狀態</SelectItem>
                       <SelectItem value="pending">待付款</SelectItem>
                       <SelectItem value="paid">已付款</SelectItem>

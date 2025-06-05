@@ -12,6 +12,7 @@ import { getOrganizations, createApplication } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import Image from "next/image";
 
 // 定義表單資料介面
 interface FormData {
@@ -152,10 +153,12 @@ export default function ApplyPage() {
             {organization.cover_image_url &&
               !isImageFailed(organization.cover_image_url) && (
                 <div className="aspect-video sm:aspect-[2/1] bg-gray-200 overflow-hidden">
-                  <img
+                  <Image
                     src={organization.cover_image_url}
                     alt={organization.org_name}
                     className="w-full h-full object-cover"
+                    width={640}
+                    height={360}
                     onError={() =>
                       handleImageError(organization.cover_image_url)
                     }
@@ -169,10 +172,12 @@ export default function ApplyPage() {
                 <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0">
                   {organization.logo_url &&
                   !isImageFailed(organization.logo_url) ? (
-                    <img
+                    <Image
                       src={organization.logo_url}
                       alt={organization.org_name}
                       className="w-full h-full rounded-full object-cover"
+                      width={80}
+                      height={80}
                       onError={() => handleImageError(organization.logo_url)}
                     />
                   ) : (

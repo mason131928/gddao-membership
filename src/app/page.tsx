@@ -11,6 +11,7 @@ import { getOrganizations } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import Image from "next/image";
 
 // 定義團體資料介面
 interface Organization {
@@ -87,19 +88,23 @@ export default function HomePage() {
                 <div className="aspect-video bg-gray-200 flex items-center justify-center relative">
                   {org.cover_image_url &&
                   !isImageFailed(org.cover_image_url) ? (
-                    <img
+                    <Image
                       src={org.cover_image_url}
                       alt={org.org_name || org.name}
                       className="w-full h-full object-cover"
+                      width={320}
+                      height={180}
                       onError={() =>
                         handleImageError(org.cover_image_url || "")
                       }
                     />
                   ) : org.logo_url && !isImageFailed(org.logo_url) ? (
-                    <img
+                    <Image
                       src={org.logo_url}
                       alt={org.org_name || org.name}
                       className="w-full h-full object-contain p-6 sm:p-8"
+                      width={64}
+                      height={64}
                       onError={() => handleImageError(org.logo_url || "")}
                     />
                   ) : (
@@ -130,10 +135,12 @@ export default function HomePage() {
                     {/* 小Logo - 移動端稍小 */}
                     <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 flex items-center justify-center">
                       {org.logo_url && !isImageFailed(org.logo_url) ? (
-                        <img
+                        <Image
                           src={org.logo_url}
                           alt={org.org_name || org.name}
                           className="w-full h-full rounded-full object-cover"
+                          width={48}
+                          height={48}
                           onError={() => handleImageError(org.logo_url || "")}
                         />
                       ) : (

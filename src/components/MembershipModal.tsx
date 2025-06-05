@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Organization } from "@/types/membership";
-import { createApplication, createPayment } from "@/lib/api";
+import { createApplication } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 import {
   Dialog,
@@ -106,55 +106,28 @@ export function MembershipModal({
         throw new Error("方案ID無效");
       }
 
-      // 提交申請
-      const application = await createApplication({
+      // 提交申請（後端會自動創建付款並返回付款URL）
+      const response = await createApplication({
         organization_id: organization.id,
         planId,
         ...data,
       });
 
-      // 檢查申請結果
-      console.log("申請提交結果:", application);
+      console.log("申請提交結果:", response);
 
-      if (!application || !application.id) {
+      // 檢查申請結果
+      if (!response || !response.application_id) {
         throw new Error("申請創建失敗，無法獲取申請ID");
       }
 
-      // 創建付款訂單
-      const amount = organization.plans?.[0]?.amount
-        ? parseFloat(organization.plans[0].amount)
-        : 300;
-      console.log("付款金額:", amount);
-
-      let payment;
-      try {
-        payment = await createPayment({
-          applicationId: application.id,
-          amount,
-          organizationId: organization.id,
-        });
-        console.log("付款訂單創建結果:", payment);
-      } catch (paymentError) {
-        console.error("付款 API 調用失敗:", paymentError);
-        throw new Error(
-          `付款 API 調用失敗: ${
-            paymentError instanceof Error ? paymentError.message : "未知錯誤"
-          }`
-        );
+      // 檢查是否有付款URL
+      if (!response.payment_url) {
+        console.error("申請響應缺少 payment_url:", response);
+        throw new Error("申請創建失敗：缺少付款 URL");
       }
 
-      // 檢查付款 URL 是否有效
-      if (!payment) {
-        throw new Error("付款訂單創建失敗：返回空結果");
-      }
-
-      if (!payment.paymentUrl) {
-        console.error("付款響應缺少 paymentUrl:", payment);
-        throw new Error("付款訂單創建失敗：缺少付款 URL");
-      }
-
-      // 跳轉到藍新金流付款頁面
-      window.location.href = payment.paymentUrl;
+      // 直接跳轉到藍新金流付款頁面
+      window.location.href = response.payment_url;
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "提交失敗，請重試";
@@ -166,10 +139,8 @@ export function MembershipModal({
         setError(
           "您已經提交過申請，如需查看申請狀態請聯繫客服，或嘗試使用不同的電子信箱申請。"
         );
-      } else if (errorMessage.includes("付款 API 調用失敗")) {
+      } else if (errorMessage.includes("缺少付款 URL")) {
         setError(`付款系統錯誤：${errorMessage}`);
-      } else if (errorMessage.includes("付款訂單創建失敗")) {
-        setError(`付款訂單問題：${errorMessage}`);
       } else {
         setError(errorMessage);
       }
@@ -430,7 +401,7 @@ export function MembershipModal({
           {/* 聯絡地址 */}
           <div>
             <Label htmlFor="address" className="text-base font-medium">
-              聯絡地址 *
+              聯絡地址 <span className="text-red-500">*</span>
             </Label>
             <Textarea
               id="address"
