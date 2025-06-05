@@ -21,6 +21,12 @@ interface FormData {
   address?: string;
 }
 
+interface ApplicationResult {
+  payment_url?: string;
+  application_id?: number;
+  id?: number;
+}
+
 export default function ApplyPage() {
   const params = useParams();
   const router = useRouter();
@@ -38,7 +44,7 @@ export default function ApplyPage() {
   // 提交申請的 mutation
   const mutation = useMutation({
     mutationFn: createApplication,
-    onSuccess: (result) => {
+    onSuccess: (result: ApplicationResult) => {
       console.log("申請成功:", result);
 
       // 檢查後端是否返回付款URL
@@ -52,7 +58,7 @@ export default function ApplyPage() {
         router.push(`/payment/${result.application_id || result.id}`);
       }
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error("申請失敗:", error);
       const errorMessage =
         error instanceof Error ? error.message : "申請失敗，請稍後重試";

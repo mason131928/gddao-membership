@@ -29,6 +29,8 @@ interface Application {
   status: string;
   paid_at?: string;
   applied_at: string;
+  next_payment_date?: string;
+  next_payment_amount?: string | number;
 }
 
 export default function AdminDashboard() {
@@ -238,13 +240,14 @@ export default function AdminDashboard() {
           <CardContent>
             {applications && applications.length > 0 ? (
               <div className="space-y-3">
-                {/* 桌面版標題欄 - 只在中等螢幕以上顯示 */}
-                <div className="hidden md:grid grid-cols-5 gap-4 items-center py-3 px-4 bg-muted/30 rounded-lg font-semibold text-sm text-muted-foreground">
+                {/* 桌面版標題欄 - 只在中等螢幕以上顯示，調整比例 */}
+                <div className="hidden md:grid grid-cols-6 gap-4 items-center py-3 px-4 bg-muted/30 rounded-lg font-semibold text-sm text-muted-foreground">
                   <div>姓名</div>
                   <div>電話</div>
                   <div>Email</div>
                   <div>繳款金額</div>
-                  <div className="text-right">付款狀況</div>
+                  <div>付款狀況</div>
+                  <div>下次繳費日期/金額</div>
                 </div>
 
                 {/* 申請列表 */}
@@ -257,12 +260,7 @@ export default function AdminDashboard() {
                       {/* 移動端垂直佈局 */}
                       <div className="md:hidden space-y-3">
                         {/* 基本資訊 */}
-                        <div className="flex items-start gap-3">
-                          <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                            <span className="text-primary font-semibold text-base">
-                              {app.name ? app.name.charAt(0) : "?"}
-                            </span>
-                          </div>
+                        <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-foreground text-base">
                               {app.name || "未提供姓名"}
@@ -307,26 +305,41 @@ export default function AdminDashboard() {
                               </span>
                             </div>
                           )}
+                          {app.next_payment_date && (
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-muted-foreground">
+                                下次繳費日期:
+                              </span>
+                              <span className="text-sm text-blue-600 font-medium">
+                                {new Date(
+                                  app.next_payment_date
+                                ).toLocaleDateString("zh-TW")}
+                              </span>
+                            </div>
+                          )}
+                          {app.next_payment_amount && (
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-muted-foreground">
+                                下次繳費金額:
+                              </span>
+                              <span className="text-sm text-blue-600 font-medium">
+                                NT${" "}
+                                {parseFloat(
+                                  String(app.next_payment_amount || 0)
+                                ).toLocaleString()}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
                       {/* 桌面版水平佈局 */}
-                      <div className="hidden md:grid grid-cols-5 gap-4 items-center">
+                      <div className="hidden md:grid grid-cols-6 gap-4 items-center">
                         {/* 姓名 */}
-                        <div className="flex items-center gap-3">
-                          <div className="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                            <span className="text-primary font-semibold text-sm">
-                              {app.name ? app.name.charAt(0) : "?"}
-                            </span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-foreground text-base">
-                              {app.name || "未提供姓名"}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {app.phone || "未提供"}
-                            </p>
-                          </div>
+                        <div>
+                          <p className="font-semibold text-foreground text-base">
+                            {app.name || "未提供姓名"}
+                          </p>
                         </div>
 
                         {/* 電話 */}
@@ -354,12 +367,37 @@ export default function AdminDashboard() {
                         </div>
 
                         {/* 付款狀況 */}
-                        <div className="flex flex-col items-end">
+                        <div className="flex flex-col items-start">
                           {getStatusBadge(app.status)}
                           {app.paid_at && (
                             <p className="text-xs text-green-600 mt-1">
                               {formatDate(app.paid_at)}
                             </p>
+                          )}
+                        </div>
+
+                        {/* 下次繳費資訊（合併日期和金額） */}
+                        <div className="flex flex-col items-start">
+                          {app.next_payment_date ? (
+                            <>
+                              <p className="text-sm text-blue-600 font-medium">
+                                {new Date(
+                                  app.next_payment_date
+                                ).toLocaleDateString("zh-TW")}
+                              </p>
+                              {app.next_payment_amount && (
+                                <p className="text-xs text-blue-600 mt-1">
+                                  NT${" "}
+                                  {parseFloat(
+                                    String(app.next_payment_amount || 0)
+                                  ).toLocaleString()}
+                                </p>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">
+                              -
+                            </span>
                           )}
                         </div>
                       </div>

@@ -201,14 +201,181 @@ export async function exportApplications(
   status?: string
 ) {
   try {
-    const statusParam = status ? `&status=${status}` : "";
-    const url = `${API_BASE_URL}/membership/admin/export/applications?organization_id=${organizationId}${statusParam}`;
+    // 暫時使用前端CSV匯出，直到PHP後端Excel功能部署完成
+    console.log("⚠️ 使用前端CSV匯出功能（PHP後端Excel功能待部署）");
 
-    // 直接開啟下載連結
-    window.open(url, "_blank");
+    // 獲取所有申請資料
+    let allApplications: any[] = [];
+    let page = 1;
+    const limit = 100;
+
+    while (true) {
+      const response = await getApplications(organizationId, page, limit);
+      if (response.code === 200 && response.data.length > 0) {
+        allApplications = allApplications.concat(response.data);
+
+        // 檢查是否還有更多資料
+        if (response.data.length < limit) {
+          break;
+        }
+        page++;
+      } else {
+        break;
+      }
+    }
+
+    // 狀態篩選
+    if (status) {
+      allApplications = allApplications.filter((app) => app.status === status);
+    }
+
+    // 生成CSV內容
+    const csvContent = generateCSV(allApplications);
+
+    // 觸發下載
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `會員申請表_${new Date().getFullYear()}${String(
+        new Date().getMonth() + 1
+      ).padStart(2, "0")}${String(new Date().getDate()).padStart(2, "0")}.csv`
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   } catch (error) {
-    console.error("匯出Excel失敗:", error);
+    console.error("匯出失敗:", error);
     throw error;
+  }
+}
+
+/**
+ * 生成CSV格式內容
+ */
+function generateCSV(applications: any[]): string {
+  // CSV表頭
+  const headers = [
+    "申請編號",
+    "姓名",
+    "手機",
+    "Email",
+    "地址",
+    "生日",
+    "身分證字號",
+    "性別",
+    "學歷",
+    "學校名稱",
+    "科系",
+    "工作單位",
+    "職稱",
+    "Line ID",
+    "會費方案",
+    "會費金額",
+    "申請狀態",
+    "申請時間",
+    "付款時間",
+    "下次繳費日期",
+    "下次繳費金額",
+  ];
+
+  // 轉換資料
+  const rows = applications.map((app) => {
+    // 性別轉換
+    const genderMap: { [key: string]: string } = {
+      male: "男",
+      female: "女",
+      other: "其他",
+    };
+
+    // 學歷轉換
+    const educationMap: { [key: string]: string } = {
+      elementary: "國小",
+      junior: "國中",
+      senior: "高中",
+      college: "二專/五專",
+      university: "大學/二技",
+      master: "碩士",
+      doctor: "博士",
+      other: "其他",
+    };
+
+    // 狀態轉換
+    const statusMap: { [key: string]: string } = {
+      pending: "待付款",
+      paid: "已付款",
+      approved: "已審核",
+      rejected: "已拒絕",
+    };
+
+    return [
+      app.id || "",
+      app.name || "",
+      app.phone || "",
+      app.email || "",
+      app.address || "",
+      app.birth_date || "",
+      app.id_number || "",
+      genderMap[app.gender] || app.gender || "",
+      educationMap[app.education] || app.education || "",
+      app.school_name || "",
+      app.department || "",
+      app.work_unit || "",
+      app.job_title || "",
+      app.line_id || "",
+      app.plan_name || "",
+      app.amount ? `$${Number(app.amount).toFixed(0)}` : "",
+      statusMap[app.status] || app.status || "",
+      app.applied_at ? formatDateTime(app.applied_at) : "",
+      app.paid_at ? formatDateTime(app.paid_at) : "",
+      app.next_payment_date ? formatDate(app.next_payment_date) : "未設定",
+      app.next_payment_amount
+        ? `$${Number(app.next_payment_amount).toFixed(0)}`
+        : "未設定",
+    ];
+  });
+
+  // 組合成CSV
+  const csvContent = [headers, ...rows]
+    .map((row) =>
+      row.map((field) => `"${String(field).replace(/"/g, '""')}"`).join(",")
+    )
+    .join("\n");
+
+  // 加上BOM以支援Excel中文顯示
+  return "\uFEFF" + csvContent;
+}
+
+/**
+ * 格式化日期時間
+ */
+function formatDateTime(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleString("zh-TW", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return dateString;
+  }
+}
+
+/**
+ * 格式化日期
+ */
+function formatDate(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("zh-TW");
+  } catch {
+    return dateString;
   }
 }
 

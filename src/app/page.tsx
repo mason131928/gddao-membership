@@ -18,6 +18,8 @@ interface Organization {
   name: string;
   org_name?: string;
   description?: string;
+  plan_description?: string;
+  org_introduction?: string;
   membership_fee?: string | number;
   cover_image_url?: string;
   logo_url?: string;
@@ -144,27 +146,40 @@ export default function HomePage() {
                     {/* 團體名稱 - 響應式字體 */}
                     <div className="min-w-0 flex-1">
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 leading-tight break-words">
-                        {org.name}
+                        {org.org_name || org.name}
                       </h3>
                     </div>
                   </div>
 
-                  {/* 描述 - 移動端限制行數 */}
+                  {/* 團體介紹 - 移動端限制行數 */}
                   <p className="text-sm sm:text-base mb-3 sm:mb-4 line-clamp-2 sm:line-clamp-3 leading-relaxed text-gray-600">
-                    {org.description || "暫無說明"}
+                    {org.org_introduction || "暫無說明"}
                   </p>
+
+                  {/* 方案說明 - 新增區塊 */}
+                  {org.plan_description && (
+                    <div className="mb-4 bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r">
+                      <p className="text-sm text-blue-800 leading-relaxed">
+                        <span className="font-medium">方案說明：</span>
+                        {org.plan_description}
+                      </p>
+                    </div>
+                  )}
 
                   {/* 會費資訊 - 突出顯示 */}
                   <div className="mb-4 sm:mb-6 bg-primary/5 rounded-lg p-3 text-center">
-                    <span className="text-xl sm:text-2xl font-bold text-primary">
-                      NT${" "}
-                      {parseFloat(
-                        String(org.membership_fee || "0")
-                      ).toLocaleString()}
-                    </span>
-                    <span className="text-sm text-muted-foreground ml-2">
-                      / 年
-                    </span>
+                    <div className="mb-1">
+                      <span className="text-xl sm:text-2xl font-bold text-primary">
+                        NT${" "}
+                        {parseFloat(
+                          String(org.membership_fee || "0")
+                        ).toLocaleString()}
+                      </span>
+                      <span className="text-sm text-muted-foreground ml-2">
+                        / 年
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{org.name}</p>
                   </div>
 
                   {/* 申請按鈕 - 移動端更大的觸控區域 */}
