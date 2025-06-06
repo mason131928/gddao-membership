@@ -420,12 +420,17 @@ export function ApplicationForm({
             </div>
           </div>
 
-          {/* 提交按鈕 */}
+          {/* 提交按鈕 - 懸浮動態效果 */}
           <div className="pt-6">
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full h-11 sm:h-11 text-sm font-medium"
+              className="w-full h-11 sm:h-11 text-sm font-medium
+                         transform transition-all duration-200 
+                         hover:scale-105 hover:shadow-lg hover:-translate-y-0.5
+                         active:scale-95 active:translate-y-0
+                         group relative overflow-hidden
+                         disabled:hover:scale-100 disabled:hover:translate-y-0 disabled:hover:shadow-none"
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">
@@ -433,7 +438,12 @@ export function ApplicationForm({
                   處理中...
                 </div>
               ) : (
-                "提交申請並前往付款"
+                <>
+                  <span className="relative z-10">提交申請並前往付款</span>
+                  <span className="ml-2 transform transition-transform duration-200 group-hover:scale-110 group-hover:translate-x-1">
+                    💳
+                  </span>
+                </>
               )}
             </Button>
           </div>

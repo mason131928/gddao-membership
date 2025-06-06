@@ -1,18 +1,18 @@
 "use client";
 
 /**
- * 會員申請頁面 - 簡化版
- * 直接跳轉到藍新付款頁面
+ * 會員申請頁面
+ * 提供簡化的申請流程，直接跳轉到藍新付款頁面
  */
 
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { ApplicationForm } from "@/components/forms/application-form";
+import { ApplicationHeader } from "./components/application-header";
+import { OrganizationInfo } from "./components/organization-info";
 import { getOrganizations, createApplication } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import Image from "next/image";
 
 // 定義表單資料介面
 interface FormData {
@@ -32,7 +32,6 @@ export default function ApplyPage() {
   const params = useParams();
   const router = useRouter();
   const organizationId = params.organizationId as string;
-  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
   // 獲取團體資訊
   const { data: organizations, isLoading } = useQuery({
@@ -75,14 +74,7 @@ export default function ApplyPage() {
     await mutation.mutateAsync(applicationData);
   };
 
-  const handleImageError = (imageUrl: string) => {
-    setFailedImages((prev) => new Set(prev).add(imageUrl));
-  };
-
-  const isImageFailed = (imageUrl: string) => {
-    return failedImages.has(imageUrl);
-  };
-
+  // 載入中狀態
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -94,6 +86,7 @@ export default function ApplyPage() {
     );
   }
 
+  // 團體不存在狀態
   if (!organization) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -127,144 +120,34 @@ export default function ApplyPage() {
     );
   }
 
+  // 主要內容
   return (
     <div className="min-h-screen bg-background">
       {/* 頂部導航 */}
-      <div className="bg-white border-b shadow-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              onClick={() => router.push("/")}
-              className="h-10 text-base"
-            >
-              ← 返回
-            </Button>
-            <h1 className="text-lg sm:text-xl font-semibold">申請入會</h1>
-          </div>
-        </div>
-      </div>
+      <ApplicationHeader />
 
       <div className="container mx-auto px-4 py-6 pb-32 sm:pb-24 max-w-4xl">
-        {/* 團體資訊展示區 - 響應式優化 */}
+        {/* 團體資訊展示區 */}
         <div className="mb-6 sm:mb-8">
-          <Card className="overflow-hidden">
-            {/* 封面圖片 - 移動端優化 */}
-            {organization.cover_image_url &&
-              !isImageFailed(organization.cover_image_url) && (
-                <div className="aspect-video sm:aspect-[2/1] bg-gray-200 overflow-hidden">
-                  <Image
-                    src={organization.cover_image_url}
-                    alt={organization.org_name}
-                    className="w-full h-full object-cover"
-                    width={640}
-                    height={360}
-                    onError={() =>
-                      handleImageError(organization.cover_image_url)
-                    }
-                  />
-                </div>
-              )}
-
-            <div className="p-4 sm:p-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4 sm:mb-6">
-                {/* Logo - 響應式大小 */}
-                <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0">
-                  {organization.logo_url &&
-                  !isImageFailed(organization.logo_url) ? (
-                    <Image
-                      src={organization.logo_url}
-                      alt={organization.org_name}
-                      className="w-full h-full rounded-full object-cover"
-                      width={80}
-                      height={80}
-                      onError={() => handleImageError(organization.logo_url)}
-                    />
-                  ) : (
-                    <div className="w-full h-full rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-primary font-semibold text-xl sm:text-xl">
-                        {organization.org_name?.charAt(0) || "組"}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 break-words">
-                    {organization.org_name}
-                  </h1>
-                  <p className="text-base sm:text-lg text-primary font-semibold">
-                    會費方案：{organization.name}
-                  </p>
-                </div>
-              </div>
-
-              {/* 描述 - 響應式字體 */}
-              {organization.description && (
-                <div className="mb-4 sm:mb-6">
-                  <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                    {organization.description}
-                  </p>
-                </div>
-              )}
-
-              {/* 會費資訊 - 突出顯示 */}
-              <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl p-4 sm:p-6 text-center">
-                <div className="mb-2">
-                  <span className="text-sm sm:text-base text-muted-foreground">
-                    年度會費
-                  </span>
-                </div>
-                <div className="text-3xl sm:text-4xl font-bold text-primary mb-2">
-                  NT${" "}
-                  {parseFloat(
-                    organization.membership_fee || 0
-                  ).toLocaleString()}
-                </div>
-                <div className="text-sm sm:text-sm text-muted-foreground">
-                  完成繳費後即可成為正式會員
-                </div>
-              </div>
-            </div>
-          </Card>
+          <OrganizationInfo organization={organization} />
         </div>
 
-        {/* 申請表單 - 響應式優化 */}
-        <Card>
-          <CardContent className="p-4 sm:p-6 lg:p-8">
-            <div className="mb-6">
-              <h2 className="text-lg sm:text-xl font-semibold mb-2">
-                填寫申請資料
-              </h2>
-              <p className="text-sm sm:text-base text-muted-foreground">
-                請仔細填寫以下資料，提交後將導向付款頁面
-              </p>
-            </div>
+        {/* 申請表單區 */}
+        <div className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-xl sm:text-2xl font-semibold mb-2">
+              填寫申請資料
+            </h2>
+            <p className="text-muted-foreground">
+              請填寫完整資料以完成入會申請
+            </p>
+          </div>
 
-            <ApplicationForm
-              onSubmit={handleSubmit}
-              isLoading={mutation.isPending}
-            />
-          </CardContent>
-        </Card>
-
-        {/* 注意事項 - 移動端優化，大幅增加底部間距確保完全可滑動 */}
-        <Card className="mt-6 mb-32 sm:mb-20">
-          <CardContent className="p-4 sm:p-6">
-            <h3 className="font-semibold mb-3 text-sm sm:text-base">
-              申請須知
-            </h3>
-            <ul className="text-sm sm:text-sm text-muted-foreground space-y-2 leading-relaxed">
-              <li>• 完成付款後，也等同於入會成功</li>
-              <li>• 入會成功後將以 Email 進行通知</li>
-              <li>• 後續協會秘書會將各位加入協會LINE群組</li>
-              <li>• 如有疑問，請聯繫02-2397-2191 林小姐</li>
-            </ul>
-          </CardContent>
-        </Card>
-
-        {/* 額外的底部空白空間確保完全可滑動 */}
-        <div className="h-16 sm:h-8"></div>
+          <ApplicationForm
+            onSubmit={handleSubmit}
+            isLoading={mutation.isPending}
+          />
+        </div>
       </div>
     </div>
   );

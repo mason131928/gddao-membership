@@ -189,13 +189,38 @@ export default function HomePage() {
                     <p className="text-xs text-muted-foreground">{org.name}</p>
                   </div>
 
-                  {/* 申請按鈕 - 移動端更大的觸控區域 */}
+                  {/* 申請按鈕 - 懸浮動態效果 */}
                   <Button
                     onClick={() => handleApply(org.organization_id)}
-                    className="w-full h-11 sm:h-10 text-sm sm:text-base font-medium"
+                    className="w-full h-11 sm:h-10 text-sm sm:text-base font-medium 
+                               transform transition-all duration-200 
+                               hover:scale-105 hover:shadow-lg hover:-translate-y-0.5
+                               active:scale-95 active:translate-y-0
+                               group relative overflow-hidden"
                     size="default"
                   >
-                    立即申請入會
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      <svg
+                        className="w-4 h-4 transition-transform duration-200 group-hover:scale-110"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 7l5 5m0 0l-5 5m5-5H6"
+                        />
+                      </svg>
+                      立即申請入會
+                    </span>
+
+                    {/* 背景動畫效果 */}
+                    <div
+                      className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 
+                                    opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                    />
                   </Button>
                 </CardContent>
               </Card>
@@ -232,9 +257,34 @@ export default function HomePage() {
           <Button
             variant="outline"
             onClick={() => router.push("/admin")}
-            className="w-full sm:w-auto h-11 sm:h-10 text-sm sm:text-base"
+            className="w-full sm:w-auto h-11 sm:h-10 text-sm sm:text-base
+                       transform transition-all duration-200 
+                       hover:scale-105 hover:shadow-md hover:-translate-y-0.5
+                       active:scale-95 active:translate-y-0
+                       group relative overflow-hidden"
           >
-            管理後台登入
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              <svg
+                className="w-4 h-4 transition-transform duration-200 group-hover:rotate-12"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+              管理後台登入
+            </span>
           </Button>
         </div>
 
