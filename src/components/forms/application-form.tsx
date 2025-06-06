@@ -424,6 +424,7 @@ export function ApplicationForm({
           <div className="pt-6">
             <Button
               type="submit"
+              variant="outline"
               disabled={isLoading}
               className="w-full h-11 sm:h-11 text-sm font-medium
                          transform transition-all duration-200 

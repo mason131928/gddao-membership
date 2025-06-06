@@ -192,6 +192,7 @@ export default function HomePage() {
                   {/* 申請按鈕 - 懸浮動態效果 */}
                   <Button
                     onClick={() => handleApply(org.organization_id)}
+                    variant="outline"
                     className="w-full h-11 sm:h-10 text-sm sm:text-base font-medium 
                                transform transition-all duration-200 
                                hover:scale-105 hover:shadow-lg hover:-translate-y-0.5
