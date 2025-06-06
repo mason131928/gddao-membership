@@ -37,7 +37,10 @@ export default function ApplyPage() {
   // 獲取團體資訊
   const { data: organizations, isLoading } = useQuery({
     queryKey: ["organizations", organizationId],
-    queryFn: () => getOrganizations(parseInt(organizationId)),
+    queryFn: () => {
+      console.log("申請頁面 - 獲取團體資訊，organizationId:", organizationId);
+      return getOrganizations(parseInt(organizationId));
+    },
   });
 
   const organization = organizations?.[0]; // 因為是按ID查詢，只會返回一個
