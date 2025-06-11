@@ -4,7 +4,7 @@
 
 // 正確的API基礎URL，考慮到basePath
 const API_BASE_URL =
-  process.env.NODE_ENV === "production" ? "/membership/api" : "/api";
+  process.env.NODE_ENV === "production" ? "/membership/api" : "/membership/api";
 
 // 除錯模式顯示配置資訊
 if (process.env.NEXT_PUBLIC_DEBUG === "true") {

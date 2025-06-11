@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     // 創建超時控制器
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超時
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     try {
       // 轉發到後端API進行處理
@@ -48,54 +48,48 @@ export async function POST(request: NextRequest) {
       const responseText = await response.text();
       console.log("📄 後端響應內容:", responseText);
 
-      // 準備成功頁面URL
-      const successUrl = new URL("/membership/payment/success", request.url);
+      // 從商戶訂單號中提取申請ID
+      // 商戶訂單號格式：MEMBERSHIP_YYYYMMDD_HHMMSS_申請ID
+      const merchantOrderNo = callbackData.MerchantOrderNo || "";
+      const applicationId = merchantOrderNo.split("_").pop() || "";
+
+      // 準備狀態檢查頁面URL
+      const statusUrl = new URL("/membership/payment/status", request.url);
+
+      if (applicationId) {
+        statusUrl.searchParams.set("application_id", applicationId);
+      }
 
       if (response.ok) {
-        console.log("✅ 回調處理成功");
-
-        // 添加成功參數
-        if (callbackData.Status === "SUCCESS" || callbackData.Status === "1") {
-          successUrl.searchParams.set("status", "success");
-          successUrl.searchParams.set("tradeNo", callbackData.TradeNo || "");
-          successUrl.searchParams.set(
-            "merchantOrderNo",
-            callbackData.MerchantOrderNo || ""
-          );
-          successUrl.searchParams.set("amt", callbackData.Amt || "");
-          successUrl.searchParams.set("payTime", callbackData.PayTime || "");
-        }
-
-        return NextResponse.redirect(successUrl);
+        console.log("✅ 回調處理成功，重定向到狀態檢查頁面");
+        return NextResponse.redirect(statusUrl);
       } else {
         console.error("❌ 後端處理失敗:", response.status, responseText);
-
-        // 後端處理失敗但仍然導向成功頁面（因為付款可能已成功）
-        successUrl.searchParams.set("status", "pending");
-        successUrl.searchParams.set("message", "付款資料處理中，請稍後確認");
-        return NextResponse.redirect(successUrl);
+        // 即使後端處理失敗，也重定向到狀態檢查頁面讓用戶查看實際狀態
+        return NextResponse.redirect(statusUrl);
       }
     } catch (fetchError) {
       clearTimeout(timeoutId);
       console.error("⚠️ 後端API調用失敗:", fetchError);
 
-      // API調用失敗，但仍導向成功頁面
-      const successUrl = new URL("/membership/payment/success", request.url);
-      successUrl.searchParams.set("status", "pending");
-      successUrl.searchParams.set("message", "系統處理中，請稍後確認付款狀態");
-      return NextResponse.redirect(successUrl);
+      // API調用失敗，仍重定向到狀態檢查頁面
+      const merchantOrderNo = callbackData.MerchantOrderNo || "";
+      const applicationId = merchantOrderNo.split("_").pop() || "";
+
+      const statusUrl = new URL("/membership/payment/status", request.url);
+      if (applicationId) {
+        statusUrl.searchParams.set("application_id", applicationId);
+      }
+
+      return NextResponse.redirect(statusUrl);
     }
   } catch (error) {
     console.error("💥 付款回調處理錯誤：", error);
 
-    // 錯誤處理，但仍導向成功頁面
-    const successUrl = new URL("/membership/payment/success", request.url);
-    successUrl.searchParams.set("status", "error");
-    successUrl.searchParams.set(
-      "message",
-      "系統處理中，請聯繫客服確認付款狀態"
-    );
-    return NextResponse.redirect(successUrl);
+    // 錯誤處理，重定向到狀態檢查頁面
+    const statusUrl = new URL("/membership/payment/status", request.url);
+    statusUrl.searchParams.set("error", "callback_error");
+    return NextResponse.redirect(statusUrl);
   }
 }
 
